@@ -16,25 +16,9 @@ This repository contains the reference implementation of Multi-level DCI, which 
 
 # Setup
 
-The library can be compiled in one of two ways: using Python distutils or the good old Makefile. The former requires less manual configuration, but *cannot* be used if your code uses the C interface. 
+The library can be compiled using the good old Makefile.
 
-**Note:** If your Python interpreter is named differently, e.g.: "python3", you will need to replace all occurrences of "python" with "python3" in the commands below.
-
-## Option 1: Python distutils
-
-If you have sudo access, run the following command from the root directory of the code base to compile and install as a Python package:
-```bash
-sudo python setup.py install
-```
-
-If you do not have sudo access, run the following command instead:
-```bash
-python setup.py install --user
-```
-
-## Option 2: Makefile 
-
-In the root directory of the code base, follow the instructions in the Makefile to specify the paths to BLAS, and optionally, Python, NumPy and TensorFlow. 
+In the root directory of the code base, follow the instructions in the Makefile to specify the paths to BLAS, and optionally, Python and NumPy. 
 
 ### Python Interface
 
