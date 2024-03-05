@@ -2,21 +2,46 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/yuzhenmao/Iceformer/blob/main/LICENSE)
 
-The official implementation of IceFormer: Accelerated Inference with Long-Sequence Transformers on CPUs (ICLR 2024).
+### [Project](https://people.eecs.berkeley.edu/~ke.li/projects/dci/) | [Slides](https://people.eecs.berkeley.edu/~ke.li/papers/dci_slides.pdf) | [Poster](https://people.eecs.berkeley.edu/~ke.li/papers/pdci_icml17_poster.pdf) | [Talk Video](https://vimeo.com/238229447) | [Paper](https://arxiv.org/abs/1703.00440)
 
-This repository contains the reference implementation of Multi-level DCI, which was written in C to take advantage of compile-time optimizations and multi-threading. It comes with a C interface, and a Python 3 interface. Currently, the code only runs on the CPU. GPU support will be added in the future. 
+The official implementation of _**IceFormer: Accelerated Inference with Long-Sequence Transformers on CPUs**_ (ICLR 2024).
+
+<img width="825" alt="Screenshot 2024-03-05 at 1 40 34 PM" src="https://github.com/yuzhenmao/IceFormer/assets/57878927/5f658c13-16ba-4435-a488-3e733870ed10">\
+
+This repository contains the reference implementation of Multi-level Dynamic Continuous Indexing (Multi-level DCI), which was written in C to take advantage of compile-time optimizations and multi-threading. It comes with a C interface, and a Python 2 & 3 interface. Currently, the code only runs on the CPU. GPU support will be added in the future. 
+
+Dynamic Continuous Indexing (DCI) is a family of randomized algorithms for exact _k_-nearest neighbour search that overcomes the curse of dimensionality. Its query time complexity is linear in ambient dimensionality and sublinear in intrinsic dimensionality. Details of the algorithm and analysis of time complexity can be found in the following papers:
+
+"[Fast _k_-Nearest Neighbour Search via Dynamic Continuous Indexing](https://arxiv.org/abs/1512.00442)", _International Conference on Machine Learning (ICML)_, 2016\
+"[Fast _k_-Nearest Neighbour Search via Prioritized DCI](https://arxiv.org/abs/1703.00440)", _International Conference on Machine Learning (ICML)_, 2017\
 
 # Prerequisites
 
 1. A C compiler with support for OpenMP, e.g.: gcc
-2. Python 3.1+
+2. Python 2.7+ or Python 3.1+
 3. A BLAS library (supported implementations include the reference implementation from Netlib, ATLAS, OpenBLAS and MKL)
 4. Python development headers
 5. (If Python interface is desired) NumPy
 
 # Setup
 
-The library can be compiled using the good old Makefile.
+The library can be compiled in one of two ways: using Python distutils or the good old Makefile. The former requires less manual configuration, but *cannot* be used if your code uses the C interface. 
+
+**Note:** If your Python interpreter is named differently, e.g.: "python3", you will need to replace all occurrences of "python" with "python3" in the commands below.
+
+## Option 1: Python distutils
+
+If you have sudo access, run the following command from the root directory of the code base to compile and install as a Python package:
+```bash
+sudo python setup.py install
+```
+
+If you do not have sudo access, run the following command instead:
+```bash
+python setup.py install --user
+```
+
+## Option 2: Makefile 
 
 In the root directory of the code base, follow the instructions in the Makefile to specify the paths to BLAS, and optionally, Python and NumPy. 
 
@@ -46,7 +71,6 @@ In the root directory of the code base, execute the following commands, dependin
 python examples/example.py
 ```
 
-
 ### C Interface
 
 ```bash
@@ -62,3 +86,14 @@ Please cite the following paper if you found this library useful in your researc
 ### IceFormer: Accelerated Inference with Long-Sequence Transformers on CPUs
 [Yuzhen Mao](https://scholar.google.com/citations?user=9wKn1A0AAAAJ&hl=en), [Martin Ester](https://sites.google.com/view/esterlab), [Ke Li](https://www.sfu.ca/~keli/)\
 *International Conference on Learning Representations (ICLR)*, 2024
+
+```
+@inproceedings{
+mao2024iceformer,
+title={IceFormer: Accelerated Inference with Long-Sequence Transformers on {CPU}s},
+author={Yuzhen Mao and Martin Ester and Ke Li},
+booktitle={The Twelfth International Conference on Learning Representations},
+year={2024},
+url={https://openreview.net/forum?id=6RR3wU4mSZ}
+}
+```
