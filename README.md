@@ -89,11 +89,11 @@ Please cite the following paper if you found this library useful in your researc
 
 ```
 @inproceedings{
-mao2024iceformer,
-title={IceFormer: Accelerated Inference with Long-Sequence Transformers on {CPU}s},
-author={Yuzhen Mao and Martin Ester and Ke Li},
-booktitle={The Twelfth International Conference on Learning Representations},
-year={2024},
-url={https://openreview.net/forum?id=6RR3wU4mSZ}
+  mao2024iceformer,
+  title={IceFormer: Accelerated Inference with Long-Sequence Transformers on {CPU}s},
+  author={Yuzhen Mao and Martin Ester and Ke Li},
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=6RR3wU4mSZ}
 }
 ```
