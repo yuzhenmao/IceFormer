@@ -13,7 +13,7 @@ This repository contains the reference implementation of Multi-level Dynamic Con
 Dynamic Continuous Indexing (DCI) is a family of randomized algorithms for exact _k_-nearest neighbour search that overcomes the curse of dimensionality. Its query time complexity is linear in ambient dimensionality and sublinear in intrinsic dimensionality. Details of the algorithm and analysis of time complexity can be found in the following papers:
 
 "[Fast _k_-Nearest Neighbour Search via Dynamic Continuous Indexing](https://arxiv.org/abs/1512.00442)", _International Conference on Machine Learning (ICML)_, 2016\
-"[Fast _k_-Nearest Neighbour Search via Prioritized DCI](https://arxiv.org/abs/1703.00440)", _International Conference on Machine Learning (ICML)_, 2017\
+"[Fast _k_-Nearest Neighbour Search via Prioritized DCI](https://arxiv.org/abs/1703.00440)", _International Conference on Machine Learning (ICML)_, 2017
 
 # Prerequisites
 
