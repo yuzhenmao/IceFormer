@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>IceFormer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css"/>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css"/>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <link rel="stylesheet" href="./website/index.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+</head>
+<body>
+
+<a href="https://github.com/yuzhenmao/IceFormer" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: fixed; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+<div class="container-fluid text-center">
+    <div class="row content">
+        <h1 class="display-1">IceFormer</h1>
+      <p class="lead">Accelerated Inference with Long-Sequence Transformers on CPUs</p>
+        <div class="col-sm-2"></div>
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2">
+            <a href="https://sites.google.com/view/niopeng/home"><p class="name">Yuzhen Mao</p></a>
+            <p class="affiliation">School of Computing Science<br>Simon Fraser University</p>
+        </div>
+        <div class="col-sm-2">
+            <a href="https://amoazeni75.github.io/"><p class="name">Martin Ester</p></a>
+            <p class="affiliation">School of Computing Science<br>Simon Fraser University</p>
+        </div>
+        <div class="col-sm-2">
+            <a href="https://www.math.ias.edu/~ke.li/"><p class="name">Ke Li</p></a>
+            <p class="affiliation">School of Computing Science<br>Simon Fraser University</p>
+        </div>
+        <div class="col-sm-3"></div>
+    </div>
+
+  <div class="col-sm-4 sidenav text-left">
+      <div class="container-fluid">
+          <h3 class="shift">Contents</h3>
+      <ul class="nav nav-pills nav-stacked">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#sr">16x Super-Resolution</a></li>
+        <li><a href="#co">Image Colourization</a></li>
+        <li><a href="#dc">Image Decompression</a></li>
+        <li><a href="#n2d">Night-to-Day</a></li>
+        <li><a href="#imle">IMLE vs GAN</a></li>
+        <li><a href="#citation">Citation</a></li>
+      </ul><br>
+      </div>
+
+    </div>
+
+  <div class="col-sm-4 sidenav barright text-left">
+      <div class="container-fluid">
+          <h3>Links</h3>
+          <div class="row">
+              <div class="col-sm-6">
+                  <a href="https://arxiv.org/abs/2211.14286"><img src="./website/paper_icon.jpg" alt="Paper" width=48px></a>
+                  <p>Paper</p>
+              </div>
+              <div class="col-sm-6">
+                  <a href="https://github.com/yuzhenmao/IceFormer"><img src="./website/github.jpg" alt="Github" width=48px></a>
+                  <p>Code</p>
+              </div>
+          </div>
+      </div>
+    </div>
+
+  <div class="row content">
+    <div class="col-sm-3">
+    </div>
+
+    <div class="col-sm-6 text-left">
+
+        <div id="overview" class="video-container">
+            <iframe class="responsive-iframe" src="https://www.youtube.com/embed/plgPL3XyzRg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <hr>
+
+      <h2 id="sr">16x Super-Resolution</h2>
+        <p>We use our method to increase the width and height of input images by a factor of 16x.
+            Toggle for results from our method (CHIMLE) and those of leading baselines,
+            including GAN-based general-purpose methods (<a href="https://arxiv.org/abs/1711.11586">BicycleGAN</a>,
+            <a href="https://arxiv.org/abs/1903.05628">MSGAN</a>, <a href="https://arxiv.org/abs/2103.07893">DivCo</a>
+            and <a href="https://arxiv.org/abs/2203.09333">MoNCE</a>) , diffusion-based general-purpose methods
+            (<a href="https://arxiv.org/abs/2201.11793">DDRM</a> and <a href="https://arxiv.org/abs/2207.09786">NDM</a>),
+            a task specific method (<a href="https://arxiv.org/abs/2005.12597">RFB-ESRGAN</a>) and
+            <a href="https://arxiv.org/abs/2004.03590">conditional IMLE (cIMLE)</a>.
+        </p>
+        <div class="my-carousel">
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp2.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp3.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp4.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp5.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp6.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div class="sr-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/SR/CHIMLE/inp1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+        </div>
+        <div class="container-fluid text-center my-buttons">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default" id="btn-sr-inp">
+                <input type="radio" name="options"> Input
+              </label>
+              <label class="btn btn-default" id="btn-sr-bgan">
+                <input type="radio" name="options"> BicycleGAN
+              </label>
+              <label class="btn btn-default" id="btn-sr-msgan">
+                <input type="radio" name="options"> MSGAN
+              </label>
+              <label class="btn btn-default" id="btn-sr-divco">
+                <input type="radio" name="options"> DivCo
+              </label>
+              <label class="btn btn-default" id="btn-sr-monce">
+                <input type="radio" name="options"> MoNCE
+              </label>
+              <label class="btn btn-default" id="btn-sr-ddrm">
+                <input type="radio" name="options"> DDRM
+              </label>
+              <label class="btn btn-default" id="btn-sr-ndm">
+                <input type="radio" name="options"> NDM
+              </label>
+              <label class="btn btn-default" id="btn-sr-rfb">
+                <input type="radio" name="options"> RFB-ESRGAN
+              </label>
+                <label class="btn btn-default" id="btn-sr-cIMLE">
+                <input type="radio" name="options"> cIMLE
+              </label>
+              <label class="btn btn-default active" id="btn-sr-chimle">
+                <input type="radio" name="options" checked> CHIMLE
+              </label>
+            </div>
+        </div>
+        <hr>
+
+     <h2 id="co">Image Colourization</h2>
+        <p>We use our method to colourize a grayscale image.
+            Toggle for results from our method (CHIMLE) and those of leading baselines, including GAN-based general-purpose methods (<a href="https://arxiv.org/abs/1711.11586">BicycleGAN</a>, <a href="https://arxiv.org/abs/1903.05628">MSGAN</a>, <a href="https://arxiv.org/abs/2103.07893">DivCo</a> and <a href="https://arxiv.org/abs/2203.09333">MoNCE</a>) , diffusion-based general-purpose methods (<a href="https://arxiv.org/abs/2201.11793">DDRM</a> and <a href="https://arxiv.org/abs/2207.09786">NDM</a>), a task specific method (<a href="https://arxiv.org/abs/2005.10825">InstColorization</a>) and <a href="https://arxiv.org/abs/2004.03590">conditional IMLE (cIMLE)</a>.
+        </p>
+        <div class="my-carousel">
+            <div id="co-1" class="co-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Colorization/CHIMLE/inp2.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="co-2" class="co-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Colorization/CHIMLE/inp3.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="co-3" class="co-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Colorization/CHIMLE/inp4.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="co-4" class="co-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Colorization/CHIMLE/inp1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+        </div>
+        <div class="container-fluid text-center my-buttons">
+            <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default" id="btn-co-inp">
+                    <input type="radio" name="options"> Input
+                </label>
+                <label class="btn btn-default" id="btn-co-bgan">
+                    <input type="radio" name="options"> BicycleGAN
+                  </label>
+                  <label class="btn btn-default" id="btn-co-msgan">
+                    <input type="radio" name="options"> MSGAN
+                  </label>
+                  <label class="btn btn-default" id="btn-co-divco">
+                    <input type="radio" name="options"> DivCo
+                  </label>
+                  <label class="btn btn-default" id="btn-co-monce">
+                    <input type="radio" name="options"> MoNCE
+                  </label>
+                  <label class="btn btn-default" id="btn-co-ddrm">
+                    <input type="radio" name="options"> DDRM
+                  </label>
+                  <label class="btn btn-default" id="btn-co-ndm">
+                    <input type="radio" name="options"> NDM
+                  </label>
+                <label class="btn btn-default" id="btn-co-inst">
+                    <input type="radio" name="options"> InstColorization
+                  </label>
+                <label class="btn btn-default" id="btn-co-cIMLE">
+                    <input type="radio" name="options"> cIMLE
+                </label>
+                <label class="btn btn-default active" id="btn-co-chimle">
+                    <input type="radio" name="options" checked> CHIMLE
+                </label>
+            </div>
+        </div>
+        <hr>
+
+
+    <h2 id="dc">Image Decompression</h2>
+        <p>We use our method to recover plausible images from a badly compressed image.
+            Toggle for results from our method (CHIMLE) and those of leading baselines, including GAN-based general-purpose methods (<a href="https://arxiv.org/abs/1711.11586">BicycleGAN</a>, <a href="https://arxiv.org/abs/1903.05628">MSGAN</a>, <a href="https://arxiv.org/abs/2103.07893">DivCo</a> and <a href="https://arxiv.org/abs/2203.09333">MoNCE</a>) , diffusion-based general-purpose methods (<a href="https://arxiv.org/abs/2201.11793">DDRM</a> and <a href="https://arxiv.org/abs/2207.09786">NDM</a>), a task specific method (<a href="https://arxiv.org/abs/1608.03981">DnCNN</a>) and <a href="https://arxiv.org/abs/2004.03590">conditional IMLE (cIMLE)</a>.
+        </p>
+        <div class="my-carousel">
+            <div id="dc-1" class="dc-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Decompression/CHIMLE/inp2.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="dc-2" class="dc-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Decompression/CHIMLE/inp3.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="dc-3" class="dc-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Decompression/CHIMLE/inp4.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="dc-4" class="dc-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Decompression/CHIMLE/inp1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+        </div>
+        <div class="container-fluid text-center my-buttons">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default" id="btn-dc-inp">
+                <input type="radio" name="options"> Input
+              </label>
+              <label class="btn btn-default" id="btn-dc-bgan">
+                <input type="radio" name="options"> BicycleGAN
+              </label>
+              <label class="btn btn-default" id="btn-dc-msgan">
+                <input type="radio" name="options"> MSGAN
+              </label>
+              <label class="btn btn-default" id="btn-dc-divco">
+                <input type="radio" name="options"> DivCo
+              </label>
+              <label class="btn btn-default" id="btn-dc-monce">
+                <input type="radio" name="options"> MoNCE
+              </label>
+              <label class="btn btn-default" id="btn-dc-ddrm">
+                <input type="radio" name="options"> DDRM
+              </label>
+              <label class="btn btn-default" id="btn-dc-ndm">
+                <input type="radio" name="options"> NDM
+              </label>
+              <label class="btn btn-default" id="btn-dc-dncnn">
+                <input type="radio" name="options"> DnCNN
+              </label>
+              <label class="btn btn-default" id="btn-dc-cIMLE">
+                <input type="radio" name="options"> cIMLE
+              </label>
+              <label class="btn btn-default active" id="btn-dc-chimle">
+                <input type="radio" name="options" checked> CHIMLE
+              </label>
+            </div>
+        </div>
+        <hr>
+
+
+        <h2 id="n2d">Night-to-Day</h2>
+        <p>We use our method to convert a scene at nighttime to daytime.
+            Toggle for results from our method (CHIMLE) and those of leading baselines, including GAN-based general-purpose methods (<a href="https://arxiv.org/abs/1711.11586">BicycleGAN</a>, <a href="https://arxiv.org/abs/1903.05628">MSGAN</a>, <a href="https://arxiv.org/abs/2103.07893">DivCo</a> and <a href="https://arxiv.org/abs/2203.09333">MoNCE</a>) , a diffusion-based general-purpose method (<a href="https://arxiv.org/abs/2207.09786">NDM</a>) and <a href="https://arxiv.org/abs/2004.03590">conditional IMLE (cIMLE)</a>.
+        </p>
+        <div class="my-carousel">
+            <div id="n2d-1" class="n2d-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Night2Day/CHIMLE/inp2.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="n2d-2" class="n2d-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Night2Day/CHIMLE/inp3.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="n2d-3" class="n2d-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Night2Day/CHIMLE/inp4.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <div id="n2d-4" class="n2d-carousel-item"><video class="vid-item" width=94% controls autoplay muted loop><source src="./website/samples/Night2Day/CHIMLE/inp1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+        </div>
+        <div class="container-fluid text-center my-buttons">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-default" id="btn-n2d-inp">
+                <input type="radio" name="options"> Input
+              </label>
+              <label class="btn btn-default" id="btn-n2d-bgan">
+                <input type="radio" name="options"> BicycleGAN
+              </label>
+              <label class="btn btn-default" id="btn-n2d-msgan">
+                <input type="radio" name="options"> MSGAN
+              </label>
+              <label class="btn btn-default" id="btn-n2d-divco">
+                <input type="radio" name="options"> DivCo
+              </label>
+              <label class="btn btn-default" id="btn-n2d-monce">
+                <input type="radio" name="options"> MoNCE
+              </label>
+              <label class="btn btn-default" id="btn-n2d-ndm">
+                <input type="radio" name="options"> NDM
+              </label>
+              <label class="btn btn-default" id="btn-n2d-cIMLE">
+                <input type="radio" name="options"> cIMLE
+              </label>
+              <label class="btn btn-default active" id="btn-n2d-chimle">
+                <input type="radio" name="options" checked> CHIMLE
+              </label>
+            </div>
+        </div>
+        <hr>
+
+        <div id="imle">
+        <h2>IMLE vs GAN</h2>
+            <div class="container-fluid">
+            <p>
+                <a href="https://arxiv.org/abs/1809.09087">Implicit Maximum Likelihood Estimation (IMLE)</a> trains a
+                generator without a discriminator. Below is a conceptual illustration of how IMLE works.
+                <div class="text-center">
+                    <video width=65% controls autoplay muted loop>
+                    <source src="./website/imle.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video>
+                </div>
+                <p><br>Compared to GANs, IMLE has two key differences:
+                it avoids mode collapse and training instability.
+                The animation below shows what happens when training a GAN.</p>
+                <div class="text-center">
+                    <video width=65% controls autoplay muted loop>
+                    <source src="./website/GAN_alg.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+                </video>
+                </div>
+                <p><br>As shown above, a GAN encourages <b>every</b> <i style="color:#3c71fa;">generated sample</i> to be similar to <b>some</b> <i style="color:#ff605c;">real data points</i>.
+                    On the other hand, IMLE flips the direction: it instead ensures <b><i>every</i></b> <i style="color:#ff605c;">real data point</i> has <b><i>some</i></b> similar <i style="color:#3c71fa;">generated samples</i>. </p>
+            </div>
+
+          </div>
+
+        <div class="container-fluid grey">
+            <h4>Mode Collapse</h4>
+            <p>Below is a comparison of the behaviours of GAN and IMLE over the course of training.
+                Real data points are shown as blue crosses and the probability density of generated samples is shown as a heatmap. </p>
+            <div class="container-fluid">
+                <div class="row text-center">
+                  <div class="col-sm-6">
+                      <video width=95% controls autoplay muted loop>
+                        <source src="./website/gan.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                    </video>
+                      <p>GAN</p>
+                  </div>
+                  <div class="col-sm-6">
+                      <video width=95% controls autoplay muted loop>
+                        <source src="./website/i.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                    </video>
+                      <p>IMLE</p>
+                  </div>
+              </div>
+            </div>
+            <p>As shown above, the GAN usually generates data points at the bottom and largely ignores the data points at
+                the top. In comparison, IMLE can generate all data points with similar frequency.
+            </p>
+        </div>
+
+        <div class="container-fluid">
+            <h4>Stable Training</h4>
+            <p>Because IMLE uses a non-adversarial objective, it trains stably.</p>
+            <video width=100% controls autoplay muted loop>
+                <source src="./website/stable.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video>
+            <p>The output is shown on the left and the loss over time is shown on the right.
+                The output quality improves steadily over the course of training.
+            </p>
+        </div>
+
+        <hr>
+
+        <div id="citation">
+        <h2>Citation</h2>
+            <pre><code>@inproceedings{
+  mao2024iceformer,
+  title={IceFormer: Accelerated Inference with Long-Sequence Transformers on {CPU}s},
+  author={Yuzhen Mao and Martin Ester and Ke Li},
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=6RR3wU4mSZ}
+}</code></pre>
+          </div>
+        </div>
+
+
+
+    <div class="col-sm-3 sidenav">
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    var show_option = 4;
+    $(document).ready(function(){
+      $('.my-carousel').slick({
+        centerMode: true,
+	   dots: true,
+	  centerPadding: '20px',
+	  slidesToShow: 3,
+	  infinite: true,
+	  autoplay: true,
+  	  // autoplaySpeed: 2000,
+  	  autoplaySpeed: 4000,
+  	  arrows: true,
+  	  focusOnSelect: true,
+  	  slidesToScroll: 3,
+  	  responsive: [
+    {
+      breakpoint: 720,
+      settings: {
+        slidesToShow: 2,
+        slidesToScroll: 2
+      }
+    },
+    {
+      breakpoint: 512,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1
+      }
+    }
+  ]
+      });
+    });
+
+var sr_paths = new Array();
+
+sr_paths[0] = [
+        "./website/samples/SR/Input/inp2.mp4",
+        "./website/samples/SR/bicyclegan/inp2.mp4",
+        "./website/samples/SR/msgan/inp2.mp4",
+        "./website/samples/SR/divco/inp2.mp4",
+        "./website/samples/SR/monce/inp2.mp4",
+        "./website/samples/SR/ddrm/inp2.mp4",
+        "./website/samples/SR/ndm/inp2.mp4",
+        "./website/samples/SR/rfb-esrgan/inp2.mp4",
+        "./website/samples/SR/cIMLE/inp2.mp4",
+        "./website/samples/SR/CHIMLE/inp2.mp4"
+        ];
+sr_paths[1] = [
+        "./website/samples/SR/Input/inp3.mp4",
+        "./website/samples/SR/bicyclegan/inp3.mp4",
+        "./website/samples/SR/msgan/inp3.mp4",
+        "./website/samples/SR/divco/inp3.mp4",
+        "./website/samples/SR/monce/inp3.mp4",
+        "./website/samples/SR/ddrm/inp3.mp4",
+        "./website/samples/SR/ndm/inp3.mp4",
+        "./website/samples/SR/rfb-esrgan/inp3.mp4",
+        "./website/samples/SR/cIMLE/inp3.mp4",
+        "./website/samples/SR/CHIMLE/inp3.mp4"
+        ];
+sr_paths[2] = [
+        "./website/samples/SR/Input/inp4.mp4",
+        "./website/samples/SR/bicyclegan/inp4.mp4",
+        "./website/samples/SR/msgan/inp4.mp4",
+        "./website/samples/SR/divco/inp4.mp4",
+        "./website/samples/SR/monce/inp4.mp4",
+        "./website/samples/SR/ddrm/inp4.mp4",
+        "./website/samples/SR/ndm/inp4.mp4",
+        "./website/samples/SR/rfb-esrgan/inp4.mp4",
+        "./website/samples/SR/cIMLE/inp4.mp4",
+        "./website/samples/SR/CHIMLE/inp4.mp4"
+        ];
+sr_paths[3] = [
+        "./website/samples/SR/Input/inp5.mp4",
+        "./website/samples/SR/bicyclegan/inp5.mp4",
+        "./website/samples/SR/msgan/inp5.mp4",
+        "./website/samples/SR/divco/inp5.mp4",
+        "./website/samples/SR/monce/inp5.mp4",
+        "./website/samples/SR/ddrm/inp5.mp4",
+        "./website/samples/SR/ndm/inp5.mp4",
+        "./website/samples/SR/rfb-esrgan/inp5.mp4",
+        "./website/samples/SR/cIMLE/inp5.mp4",
+        "./website/samples/SR/CHIMLE/inp5.mp4"
+        ];
+sr_paths[4] = [
+        "./website/samples/SR/Input/inp6.mp4",
+        "./website/samples/SR/bicyclegan/inp6.mp4",
+        "./website/samples/SR/msgan/inp6.mp4",
+        "./website/samples/SR/divco/inp6.mp4",
+        "./website/samples/SR/monce/inp6.mp4",
+        "./website/samples/SR/ddrm/inp6.mp4",
+        "./website/samples/SR/ndm/inp6.mp4",
+        "./website/samples/SR/rfb-esrgan/inp6.mp4",
+        "./website/samples/SR/cIMLE/inp6.mp4",
+        "./website/samples/SR/CHIMLE/inp6.mp4"
+        ];
+sr_paths[5] = [
+        "./website/samples/SR/Input/inp1.mp4",
+        "./website/samples/SR/bicyclegan/inp1.mp4",
+        "./website/samples/SR/msgan/inp1.mp4",
+        "./website/samples/SR/divco/inp1.mp4",
+        "./website/samples/SR/monce/inp1.mp4",
+        "./website/samples/SR/ddrm/inp1.mp4",
+        "./website/samples/SR/ndm/inp1.mp4",
+        "./website/samples/SR/rfb-esrgan/inp1.mp4",
+        "./website/samples/SR/cIMLE/inp1.mp4",
+        "./website/samples/SR/CHIMLE/inp1.mp4"
+        ];
+
+  $('#btn-sr-inp').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][0];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-bgan').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][1];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-msgan').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][2];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-divco').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][3];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-monce').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][4];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-ddrm').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][5];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-ndm').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][6];
+      x[i].childNodes[0].load();
+    }})
+
+  $('#btn-sr-rfb').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][7];
+      x[i].childNodes[0].load();
+    }})
+
+    $('#btn-sr-cIMLE').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][8];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-sr-chimle').on('click', function () {
+    var x = document.getElementsByClassName("sr-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (sr_paths.length - show_option);
+      } else if (i < (sr_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (sr_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = sr_paths[cur_index][9];
+      x[i].childNodes[0].load();
+    }})
+
+
+var dc_paths = new Array();
+
+dc_paths[3] = [
+        "./website/samples/Decompression/Input/inp1.mp4",
+        "./website/samples/Decompression/bicyclegan/inp1.mp4",
+        "./website/samples/Decompression/msgan/inp1.mp4",
+        "./website/samples/Decompression/divco/inp1.mp4",
+        "./website/samples/Decompression/monce/inp1.mp4",
+        "./website/samples/Decompression/ddrm/inp1.mp4",
+        "./website/samples/Decompression/ndm/inp1.mp4",
+        "./website/samples/Decompression/DnCNN/inp1.mp4",
+        "./website/samples/Decompression/cIMLE/inp1.mp4",
+        "./website/samples/Decompression/CHIMLE/inp1.mp4"
+        ];
+dc_paths[0] = [
+        "./website/samples/Decompression/Input/inp2.mp4",
+        "./website/samples/Decompression/bicyclegan/inp2.mp4",
+        "./website/samples/Decompression/msgan/inp2.mp4",
+        "./website/samples/Decompression/divco/inp2.mp4",
+        "./website/samples/Decompression/monce/inp2.mp4",
+        "./website/samples/Decompression/ddrm/inp2.mp4",
+        "./website/samples/Decompression/ndm/inp2.mp4",
+        "./website/samples/Decompression/DnCNN/inp2.mp4",
+        "./website/samples/Decompression/cIMLE/inp2.mp4",
+        "./website/samples/Decompression/CHIMLE/inp2.mp4"
+        ];
+dc_paths[1] = [
+        "./website/samples/Decompression/Input/inp3.mp4",
+        "./website/samples/Decompression/bicyclegan/inp3.mp4",
+        "./website/samples/Decompression/msgan/inp3.mp4",
+        "./website/samples/Decompression/divco/inp3.mp4",
+        "./website/samples/Decompression/monce/inp3.mp4",
+        "./website/samples/Decompression/ddrm/inp3.mp4",
+        "./website/samples/Decompression/ndm/inp3.mp4",
+        "./website/samples/Decompression/DnCNN/inp3.mp4",
+        "./website/samples/Decompression/cIMLE/inp3.mp4",
+        "./website/samples/Decompression/CHIMLE/inp3.mp4"
+        ];
+dc_paths[2] = [
+        "./website/samples/Decompression/Input/inp4.mp4",
+        "./website/samples/Decompression/bicyclegan/inp4.mp4",
+        "./website/samples/Decompression/msgan/inp4.mp4",
+        "./website/samples/Decompression/divco/inp4.mp4",
+        "./website/samples/Decompression/monce/inp4.mp4",
+        "./website/samples/Decompression/ddrm/inp4.mp4",
+        "./website/samples/Decompression/ndm/inp4.mp4",
+        "./website/samples/Decompression/DnCNN/inp4.mp4",
+        "./website/samples/Decompression/cIMLE/inp4.mp4",
+        "./website/samples/Decompression/CHIMLE/inp4.mp4"
+        ];
+
+
+$('#btn-dc-inp').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][0];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-bgan').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][1];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-msgan').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][2];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-divco').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][3];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-monce').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][4];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-ddrm').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][5];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-ndm').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][6];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-dncnn').on('click', function () {
+var x = document.getElementsByClassName("dc-carousel-item");
+var i;
+for (i = 0; i < x.length; i++) {
+  var cur_index;
+  if (i < show_option) {
+    cur_index = i + (dc_paths.length - show_option);
+  } else if (i < (dc_paths.length + show_option)) {
+    cur_index = i - show_option;
+  } else {
+    cur_index = i - (dc_paths.length + show_option);
+  }
+  x[i].childNodes[0].src = dc_paths[cur_index][7];
+  x[i].childNodes[0].load();
+}})
+
+$('#btn-dc-cIMLE').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][8];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-dc-chimle').on('click', function () {
+    var x = document.getElementsByClassName("dc-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (dc_paths.length - show_option);
+      } else if (i < (dc_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (dc_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = dc_paths[cur_index][9];
+      x[i].childNodes[0].load();
+    }})
+
+var co_paths = new Array();
+
+co_paths[3] = [
+    "./website/samples/Colorization/Input/inp1.mp4",
+    "./website/samples/Colorization/bicyclegan/inp1.mp4",
+    "./website/samples/Colorization/msgan/inp1.mp4",
+    "./website/samples/Colorization/divco/inp1.mp4",
+    "./website/samples/Colorization/monce/inp1.mp4",
+    "./website/samples/Colorization/ddrm/inp1.mp4",
+    "./website/samples/Colorization/ndm/inp1.mp4",
+    "./website/samples/Colorization/instcolorization/inp1.mp4",
+    "./website/samples/Colorization/cIMLE/inp1.mp4",
+    "./website/samples/Colorization/CHIMLE/inp1.mp4"
+];
+co_paths[0] = [
+    "./website/samples/Colorization/Input/inp2.mp4",
+    "./website/samples/Colorization/bicyclegan/inp2.mp4",
+    "./website/samples/Colorization/msgan/inp2.mp4",
+    "./website/samples/Colorization/divco/inp2.mp4",
+    "./website/samples/Colorization/monce/inp2.mp4",
+    "./website/samples/Colorization/ddrm/inp2.mp4",
+    "./website/samples/Colorization/ndm/inp2.mp4",
+    "./website/samples/Colorization/instcolorization/inp2.mp4",
+    "./website/samples/Colorization/cIMLE/inp2.mp4",
+    "./website/samples/Colorization/CHIMLE/inp2.mp4"
+];
+co_paths[1] = [
+    "./website/samples/Colorization/Input/inp3.mp4",
+    "./website/samples/Colorization/bicyclegan/inp3.mp4",
+    "./website/samples/Colorization/msgan/inp3.mp4",
+    "./website/samples/Colorization/divco/inp3.mp4",
+    "./website/samples/Colorization/monce/inp3.mp4",
+    "./website/samples/Colorization/ddrm/inp3.mp4",
+    "./website/samples/Colorization/ndm/inp3.mp4",
+    "./website/samples/Colorization/instcolorization/inp3.mp4",
+    "./website/samples/Colorization/cIMLE/inp3.mp4",
+    "./website/samples/Colorization/CHIMLE/inp3.mp4"
+];
+co_paths[2] = [
+    "./website/samples/Colorization/Input/inp4.mp4",
+    "./website/samples/Colorization/bicyclegan/inp4.mp4",
+    "./website/samples/Colorization/msgan/inp4.mp4",
+    "./website/samples/Colorization/divco/inp4.mp4",
+    "./website/samples/Colorization/monce/inp4.mp4",
+    "./website/samples/Colorization/ddrm/inp4.mp4",
+    "./website/samples/Colorization/ndm/inp4.mp4",
+    "./website/samples/Colorization/instcolorization/inp4.mp4",
+    "./website/samples/Colorization/cIMLE/inp4.mp4",
+    "./website/samples/Colorization/CHIMLE/inp4.mp4"
+];
+
+$('#btn-co-inp').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (co_paths.length - show_option);
+      } else if (i < (co_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (co_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = co_paths[cur_index][0];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-co-bgan').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][1];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-msgan').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][2];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-divco').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][3];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-monce').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][4];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-ddrm').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][5];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-ndm').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][6];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-inst').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][7];
+        x[i].childNodes[0].load();
+    }
+})
+
+$('#btn-co-cIMLE').on('click', function () {
+var x = document.getElementsByClassName("co-carousel-item");
+var i;
+for (i = 0; i < x.length; i++) {
+    var cur_index;
+    if (i < show_option) {
+        cur_index = i + (co_paths.length - show_option);
+    } else if (i < (co_paths.length + show_option)) {
+        cur_index = i - show_option;
+    } else {
+        cur_index = i - (co_paths.length + show_option);
+    }
+    x[i].childNodes[0].src = co_paths[cur_index][8];
+    x[i].childNodes[0].load();
+}
+})
+
+$('#btn-co-chimle').on('click', function () {
+    var x = document.getElementsByClassName("co-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+        var cur_index;
+        if (i < show_option) {
+            cur_index = i + (co_paths.length - show_option);
+        } else if (i < (co_paths.length + show_option)) {
+            cur_index = i - show_option;
+        } else {
+            cur_index = i - (co_paths.length + show_option);
+        }
+        x[i].childNodes[0].src = co_paths[cur_index][9];
+        x[i].childNodes[0].load();
+    }
+})
+
+
+var n2d_paths = new Array();
+
+n2d_paths[3] = [
+        "./website/samples/Night2Day/Input/inp1.mp4",
+        "./website/samples/Night2Day/bicyclegan/inp1.mp4",
+        "./website/samples/Night2Day/msgan/inp1.mp4",
+        "./website/samples/Night2Day/divco/inp1.mp4",
+        "./website/samples/Night2Day/monce/inp1.mp4",
+        "./website/samples/Night2Day/ndm/inp1.mp4",
+        "./website/samples/Night2Day/cIMLE/inp1.mp4",
+        "./website/samples/Night2Day/CHIMLE/inp1.mp4"
+        ];
+n2d_paths[0] = [
+        "./website/samples/Night2Day/Input/inp2.mp4",
+        "./website/samples/Night2Day/bicyclegan/inp2.mp4",
+        "./website/samples/Night2Day/msgan/inp2.mp4",
+        "./website/samples/Night2Day/divco/inp2.mp4",
+        "./website/samples/Night2Day/monce/inp2.mp4",
+        "./website/samples/Night2Day/ndm/inp2.mp4",
+        "./website/samples/Night2Day/cIMLE/inp2.mp4",
+        "./website/samples/Night2Day/CHIMLE/inp2.mp4"
+        ];
+n2d_paths[1] = [
+        "./website/samples/Night2Day/Input/inp3.mp4",
+        "./website/samples/Night2Day/bicyclegan/inp3.mp4",
+        "./website/samples/Night2Day/msgan/inp3.mp4",
+        "./website/samples/Night2Day/divco/inp3.mp4",
+        "./website/samples/Night2Day/monce/inp3.mp4",
+        "./website/samples/Night2Day/ndm/inp3.mp4",
+        "./website/samples/Night2Day/cIMLE/inp3.mp4",
+        "./website/samples/Night2Day/CHIMLE/inp3.mp4"
+        ];
+n2d_paths[2] = [
+        "./website/samples/Night2Day/Input/inp4.mp4",
+        "./website/samples/Night2Day/bicyclegan/inp4.mp4",
+        "./website/samples/Night2Day/msgan/inp4.mp4",
+        "./website/samples/Night2Day/divco/inp4.mp4",
+        "./website/samples/Night2Day/monce/inp4.mp4",
+        "./website/samples/Night2Day/ndm/inp4.mp4",
+        "./website/samples/Night2Day/cIMLE/inp4.mp4",
+        "./website/samples/Night2Day/CHIMLE/inp4.mp4"
+        ];
+
+
+$('#btn-n2d-inp').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][0];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-bgan').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][1];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-msgan').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][2];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-divco').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][3];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-monce').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][4];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-ndm').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][5];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-cIMLE').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][6];
+      x[i].childNodes[0].load();
+    }})
+
+$('#btn-n2d-chimle').on('click', function () {
+    var x = document.getElementsByClassName("n2d-carousel-item");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      var cur_index;
+      if (i < show_option) {
+        cur_index = i + (n2d_paths.length - show_option);
+      } else if (i < (n2d_paths.length + show_option)) {
+        cur_index = i - show_option;
+      } else {
+        cur_index = i - (n2d_paths.length + show_option);
+      }
+      x[i].childNodes[0].src = n2d_paths[cur_index][7];
+      x[i].childNodes[0].load();
+    }})
+
+
+$(document).ready(function(){
+  // Add smooth scrolling to all links
+  $("a").on('click', function(event) {
+
+    // Make sure this.hash has a value before overriding default behavior
+    if (this.hash !== "") {
+      // Prevent default anchor click behavior
+      event.preventDefault();
+
+      // Store hash
+      var hash = this.hash;
+
+      // Using jQuery's animate() method to add smooth page scroll
+      // The optional number (800) specifies the number of milliseconds it takes to scroll to the specified area
+      $('html, body').animate({
+        scrollTop: $(hash).offset().top
+      }, 600, function(){
+
+        // Add hash (#) to URL when done scrolling (default click behavior)
+        window.location.hash = hash;
+      });
+    } // End if
+  });
+});
+
+  </script>
+
+
+
+</body>
+</html>
