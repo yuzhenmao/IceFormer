@@ -121,10 +121,10 @@ void free_instance(additional_info* info_addr, int* num_points_on_level, int** p
     if (root == NULL)
         return;
     free_cell(root, num_indices);
-    free(root);
     for (int i = 0; i < num_points; i++) {
         free_cell(info_addr+i, num_indices);
     }
+    free(root);
     if (points_on_level != NULL) {
         for (int i = 0; i < num_levels; i++) {
             free(points_on_level[i]);
@@ -429,8 +429,6 @@ static inline int dci_compare_id(const void *a, const void *b) {
 }
 
 void update_arr_indices(int num_indices, additional_info* point) {
-    if (point->flag == 0)
-        return;
     int num_points = point->cell_indices[0].num_data;
     if (num_points == 0) {
         point->arr_indices = NULL;
@@ -502,12 +500,18 @@ void dci_init(dci* const dci_inst, const int dim,
     dci_inst->max_norm = 0;
     dci_inst->parallel_level = 1;
 
-    assert(posix_memalign((void**)&(temp_proj_vec), 32,
-        sizeof(float) * (dim+1) * num_indices) == 0);
-    assert(posix_memalign((void**)&(dci_inst->proj_vec), 32,
-        sizeof(float) * dim * num_indices) == 0);
-    assert(posix_memalign((void**)&(dci_inst->add_proj_vec), 32,
-        sizeof(float) * 1 * num_indices) == 0);
+    if (posix_memalign((void**)&temp_proj_vec, 32, sizeof(float) * (dim+1) * num_indices) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
+    if (posix_memalign((void**)&(dci_inst->proj_vec), 32, sizeof(float) * dim * num_indices) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
+    if (posix_memalign((void**)&(dci_inst->add_proj_vec), 32, sizeof(float) * 1 * num_indices) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
     dci_gen_proj_vec(temp_proj_vec, dim+1, num_indices);
 
     for (int j = 0; j < num_indices; j++) {
@@ -546,8 +550,10 @@ void dci_reset(dci* const dci_inst) {
     int num_indices = dci_inst->num_comp_indices*dci_inst->num_simp_indices;
     int dim = dci_inst->dim;
     float* temp_proj_vec;
-    assert(posix_memalign((void**)&(temp_proj_vec), 32,
-        sizeof(float) * (dim+1) * num_indices) == 0);
+    if (posix_memalign((void**)&temp_proj_vec, 32, sizeof(float) * (dim+1) * num_indices) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
     dci_gen_proj_vec(temp_proj_vec, dim+1, num_indices);
     for (int j = 0; j < num_indices; j++) {
         for (int i = 0; i < dim; i++) {
@@ -1788,7 +1794,10 @@ void dci_query(dci* const dci_inst, const int dim,
     assert(dci_inst->root != NULL);
     assert(dim == dci_inst->dim);
     assert(num_neighbours > 0);
-    assert(posix_memalign((void**)&query_proj, 32, sizeof(float) * num_indices * num_queries) == 0);
+    if (posix_memalign((void**)&query_proj, 32, sizeof(float) * num_indices * num_queries) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
     matmul(num_indices, num_queries, dim, dci_inst->proj_vec, query, query_proj);
     query_transform(query, num_queries, dim, query_proj, num_indices);
 
@@ -1841,12 +1850,12 @@ void dci_query(dci* const dci_inst, const int dim,
             &(points_to_expand_next[max_num_points_to_expand * t_index]), &(num_top_candidates[max_num_points_to_expand * t_index]),
             &(query[j * dim]), &(query_proj[j * num_indices]), dci_inst->max_norm, dci_inst->norm_list, 0, query_config, top_candidate, true);
 
-        assert(nearest_neighbours[j] = (int*)malloc(sizeof(int) * cur_num_returned));
+        nearest_neighbours[j] = (int*)malloc(sizeof(int) * cur_num_returned);
         if (num_returned) {
             num_returned[j] = cur_num_returned;
         }
         if (nearest_neighbour_dists) {
-            assert(nearest_neighbour_dists[j] = (float*)malloc(sizeof(float) * cur_num_returned));
+            nearest_neighbour_dists[j] = (float*)malloc(sizeof(float) * cur_num_returned);
         }
         btree_p_search_res k;
         float exp_sum = 0.0;

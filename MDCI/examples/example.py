@@ -22,10 +22,10 @@ import sys
 import h5py
 
 try:
-    from dciknn import DCI
+    from mdci import DCI
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..')))
-    from dciknn import DCI
+    from mdci import DCI
 
 from time import time
 
@@ -122,8 +122,7 @@ def main(*args):
     padding_mask = np.ones([num_batch, num_heads, num_points], dtype=np.bool_).reshape(-1)
     
     print("Took %.4fs" % (time() - t0))
-    
-    print("Constructing Data Structure... ")
+
     t0 = time()
     
     # DCI()
@@ -137,6 +136,8 @@ def main(*args):
     # num_simp_indices:                 Number of simple indices per composite index (a larger integer like 7 or 10 is recommended).
     # max_num_points:                   Maximum number of points to store. 
     dci_db = DCI(dim, num_comp_indices, num_simp_indices, max_num_points=num_points)
+
+    print("Constructing DCI database... ")
     
     # DCI.add_query()
     # 

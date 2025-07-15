@@ -18,9 +18,11 @@ Dynamic Continuous Indexing (DCI) is a family of randomized algorithms for exact
 
 # Getting Started
 
-## 1. Build the `dciknn` Package
+## 1. Build the `mdci` Package
 
-To get started, follow the setup instructions located in the [`./IceFormer`](https://github.com/yuzhenmao/IceFormer/tree/main/IceFormer#prerequisites) folder.
+```bash
+cd MDCI; pip install -e .
+```
 
 ## 2. Implement IceFormer Attention
 
@@ -57,10 +59,10 @@ IceFormer attention
 
 ```python
 try:
-    from dciknn import DCI
+    from mdci import DCI
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    from dciknn import DCI
+    from mdci import DCI
 
 class IceFormerAttention(nn.Module):
     def __init__(self, config):

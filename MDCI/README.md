@@ -12,6 +12,12 @@ The library can be compiled in one of two ways: using Python distutils or the go
 
 **Note:** If your Python interpreter is named differently, e.g.: "python3", you will need to replace all occurrences of "python" with "python3" in the commands below.
 
+## Option 0: Pip install
+
+```bash
+pip install -e .
+```
+
 ## Option 1: Python distutils
 
 If you have sudo access, run the following command from the root directory of the code base to compile and install as a Python package:
@@ -35,7 +41,7 @@ If you would like to build the Python interface, run the following from the root
 make py
 ```
 
-If you would like to use DCI in a script outside of the root directory of the code base, either add a symbolic link to the "dciknn" subdirectory within the directory containing your script, or add the root directory of the code base to your PYTHONPATH environment variable. 
+If you would like to use DCI in a script outside of the root directory of the code base, either add a symbolic link to the "mdci" subdirectory within the directory containing your script, or add the root directory of the code base to your PYTHONPATH environment variable. 
 
 ### C Interface
 

@@ -1,3 +1,4 @@
+
 '''
 Code for IceFormer: Accelerated Inference with Long-Sequence Transformers on CPUs
 
@@ -16,6 +17,7 @@ Copyright (C) 2024    Yuzhen Mao, Ke Li
 '''
 
 import sys
+import os
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.system_info import get_info
 from numpy.distutils.core import setup
@@ -26,7 +28,7 @@ def build_ext(config, dist):
     dci_sources = ['src/dci.c', 'src/py_dci.c', 'src/util.c', 'src/hashtable_i.c', 'src/hashtable_d.c', 'src/btree_i.c', 'src/btree_p.c', 'src/hashtable_p.c', 'src/hashtable_pp.c']
     dci_headers = ['include/dci.h', 'include/util.h', 'include/hashtable_i.h', 'include/hashtable_d.h', 'include/btree_i.h', 'include/btree_p.h', 'include/hashtable_p.h', 'include/hashtable_pp.h']
     if lapack_info:
-        answer = input("Enable Multithreading? (Y/N)\n")
+        answer = os.environ.get("ENABLE_MT", "Y")
         if answer.lower().startswith("y"):
             config.add_extension(name='_dci',sources=dci_sources, depends=dci_headers, include_dirs=['include'], extra_info=lapack_info, extra_compile_args=['-fopenmp', '-DUSE_OPENMP', '-march=core-avx2'], extra_link_args=['-lgomp'])
         else:
@@ -45,7 +47,7 @@ def build_ext(config, dist):
 
 def setup_dci(dist):
 
-    config_dict = build_ext(Configuration('dciknn', parent_package=None, top_path=None), dist)
+    config_dict = build_ext(Configuration('mdci', parent_package=None, top_path=None), dist)
     
     setup(  version="0.1.0",
             description="(Modified) Dynamic Continuous Indexing reference implementation.",
@@ -77,13 +79,13 @@ def setup_dci(dist):
             Dynamic Continuous Indexing (DCI) is a family of randomized algorithms for
             exact k-nearest neighbour search that overcomes the curse of dimensionality.
             Its query time complexity is linear in ambient dimensionality and sublinear
-            in intrinsic dimensionality. ``dciknn`` is a python package that contains
+            in intrinsic dimensionality. ``mdci`` is a python package that contains
             the reference implementation of a modified version of DCI 
             and a convenient Python interface which can be used to accelerate Transformers. 
 
-            ``dciknn`` requires ``NumPy``. 
+            ``mdci`` requires ``NumPy``. 
             """,
-            packages=["dciknn"],
+            packages=["mdci"],
             **(config_dict))
             
 if __name__ == '__main__':
