@@ -19,8 +19,10 @@
 #include "numpy/arrayobject.h"
 #include "dci.h"
 #include "hashtable_pp.h"
+#ifndef NO_SIMD
 #include<immintrin.h>
 #include <x86intrin.h>
+#endif
 #include <assert.h>
 
 #if PY_MAJOR_VERSION >= 3
@@ -419,15 +421,16 @@ static PyObject *py_dci_add_query(PyObject *self, PyObject *args) {
                                 &(num_returned[max_num_points * idx]), scale, py_dci_inst_temp->num_levels);
 
             float *new_value_temp;
-            __m256 X, Y; // 256-bit values
-            __m256 dot = _mm256_setzero_ps(); // set to (0, 0, 0, 0, 0, 0, 0, 0)
-            float temp[8];
             for (int i = 0; i < attention_mask[0]; i++) {
                 if (!(mask[max_num_points * idx + i])) continue;
                 new_value_temp = &(new_value_flattened[(max_num_points * idx + i) * dim_v]);
                 for (int j = 0; j < num_returned[max_num_points * idx + i]; j++) {
                     float* x = value_temp + dim_v * nearest_neighbour_temp[i][j];
                     float weight = nearest_neighbour_dists_temp[i][j];
+#ifndef NO_SIMD
+                    __m256 X, Y; // 256-bit values
+                    __m256 dot = _mm256_setzero_ps(); // set to (0, 0, 0, 0, 0, 0, 0, 0)
+                    float temp[8];
                     float y[8] = {weight, weight, weight, weight, weight, weight, weight, weight};
                     Y = _mm256_loadu_ps(y);
                     int ii;
@@ -447,6 +450,10 @@ static PyObject *py_dci_add_query(PyObject *self, PyObject *args) {
                     }
                     for (; ii < dim_v; ii++)
                         new_value_temp[ii] += x[ii] * weight;
+#else
+                    for (int ii = 0; ii < dim_v; ii++)
+                        new_value_temp[ii] += x[ii] * weight;
+#endif
                 }
             }
             for (int i = 0; i < attention_mask[0]; i++) {
@@ -493,13 +500,14 @@ static PyObject *py_dci_add_query(PyObject *self, PyObject *args) {
                                     &(num_returned[max_num_points * idx]), scale, num_populated_levels);
 
                 float *new_value_temp;
-                __m256 X, Y; // 256-bit values
-                __m256 dot = _mm256_setzero_ps(); // set to (0, 0, 0, 0, 0, 0, 0, 0)
-                float temp[8];
                 new_value_temp = &(new_value_flattened[(max_num_points * idx + i) * dim_v]);
                 for (int j = 0; j < num_returned[max_num_points * idx]; j++) {
                     float* x = value_temp + dim_v * nearest_neighbour_temp[0][j];
                     float weight = nearest_neighbour_dists_temp[0][j];
+#ifndef NO_SIMD
+                    __m256 X, Y; // 256-bit values
+                    __m256 dot = _mm256_setzero_ps(); // set to (0, 0, 0, 0, 0, 0, 0, 0)
+                    float temp[8];
                     float y[8] = {weight, weight, weight, weight, weight, weight, weight, weight};
                     Y = _mm256_loadu_ps(y);
                     int ii;
@@ -519,6 +527,10 @@ static PyObject *py_dci_add_query(PyObject *self, PyObject *args) {
                     }
                     for (; ii < dim_v; ii++)
                         new_value_temp[ii] += x[ii] * weight;
+#else
+                    for (int ii = 0; ii < dim_v; ii++)
+                        new_value_temp[ii] += x[ii] * weight;
+#endif
                 }
                 free(nearest_neighbour_temp[0]);
                 free(nearest_neighbour_dists_temp[0]);

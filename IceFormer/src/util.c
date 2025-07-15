@@ -24,8 +24,10 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/time.h>
+#ifndef NO_SIMD
 #include<immintrin.h>
 #include <x86intrin.h>
+#endif
 
 #define INT_SIZE     (8 * sizeof(unsigned int))
 static const int SLOT_NUM = 256/INT_SIZE;
@@ -49,6 +51,7 @@ void matmul(const int M, const int N, const int K, const float* const A, const f
 
 static inline float vecmul(const float* const x, const float* const y, const int k) {
     float inner_prod = 0.0;
+#ifndef NO_SIMD
     __m256 X, Y; // 256-bit values
 	__m256 acc = _mm256_setzero_ps(); // set to (0, 0, 0, 0)
 	float temp[8];
@@ -64,6 +67,10 @@ static inline float vecmul(const float* const x, const float* const y, const int
 	// add the remaining values
 	for (; i < k; i++)
 		inner_prod += x[i] * y[i];
+#else
+    for (int i = 0; i < k; i++)
+        inner_prod += x[i] * y[i];
+#endif
 	return inner_prod;
 }
 

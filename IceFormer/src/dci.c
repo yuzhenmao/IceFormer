@@ -30,16 +30,12 @@
 #include "hashtable_d.h"
 #include "hashtable_i.h"
 #include "hashtable_p.h"
+#ifndef NO_SIMD
 #include<immintrin.h>
 #include <x86intrin.h>
+#endif
 #include <limits.h>
 #include "util.h"
-
-#ifdef DEBUG
-    #define DEBUG_PRINT printf
-#else
-    #define DEBUG_PRINT
-#endif
 
 #ifdef USE_OPENMP
 #include <omp.h>
@@ -56,6 +52,7 @@ static const int SLOT_NUM = 256/INT_SIZE;    // # of int in one SIMD register
 
 #define CLOSEST 128
 
+#ifndef NO_SIMD
 static inline void BitAnd(const unsigned int* const x, unsigned int* const y, const int k) {
     __m256i X, Y; // 256-bit values
 	long i=0;
@@ -76,6 +73,19 @@ static inline void BitNot_And(const unsigned int* const x, unsigned int* const y
 		_mm256_store_si256(y + i, _mm256_and_si256(_mm256_xor_si256(X, mask), Y));
 	}
 }
+#else
+static inline void BitAnd(const unsigned int* const x, unsigned int* const y, const int k) {
+    for (int i = 0; i < k; i++) {
+        y[i] = x[i] & y[i];
+    }
+}
+
+static inline void BitNot_And(const unsigned int* const x, unsigned int* const y, const int k) {
+    for (int i = 0; i < k; i++) {
+        y[i] = (~x[i]) & y[i];
+    }
+}
+#endif
 
 static inline float abs_d(float x) { return x > 0 ? x : -x; }
 
@@ -90,6 +100,7 @@ typedef struct tree_node {
 } tree_node;
 
 void free_cell(struct additional_info* cell, int num_indices) {
+    if(cell == NULL) return;
     // free indices only if needed
     int i;
     if (cell->cell_indices) {
@@ -107,18 +118,22 @@ void free_cell(struct additional_info* cell, int num_indices) {
 }
 
 void free_instance(additional_info* info_addr, int* num_points_on_level, int** points_on_level, int num_points, additional_info* root, int num_indices, int num_levels) {
+    if (root == NULL)
+        return;
     free_cell(root, num_indices);
+    free(root);
     for (int i = 0; i < num_points; i++) {
         free_cell(info_addr+i, num_indices);
     }
-    free(root);
     if (points_on_level != NULL) {
         for (int i = 0; i < num_levels; i++) {
             free(points_on_level[i]);
         }
         free(points_on_level);
     }
-    free(num_points_on_level);
+    if (num_points_on_level != NULL) {
+        free(num_points_on_level);
+    }
     free(info_addr);
 }
 
@@ -133,12 +148,12 @@ static inline int add_to_list(int num_candidates, int num_neighbours, idx_arr* t
             (*last_top_candidate) = *num_returned;
         }
         (*num_returned)++;
-        if (query_config.min_num_finest_level_points > 0) {
+        if (query_config.min_num_finest_level_points) {
             (*num_returned_finest_level_points) += num_finest;
         }
     }
     else if (cur_dist < (*last_top_candidate_dist)) {
-        if (query_config.min_num_finest_level_points > 0 &&
+        if (query_config.min_num_finest_level_points &&
             (*num_returned_finest_level_points) + num_finest -
             top_candidates[(*last_top_candidate)].info->num_finest_level_points[query_config.target_level] <
             query_config.min_num_finest_level_points) { // Add
@@ -149,7 +164,7 @@ static inline int add_to_list(int num_candidates, int num_neighbours, idx_arr* t
         }
         else {
             // Replace
-            if (query_config.min_num_finest_level_points > 0) {
+            if (query_config.min_num_finest_level_points) {
                 (*num_returned_finest_level_points) += num_finest -
                     top_candidates[(*last_top_candidate)].info->num_finest_level_points[query_config.target_level];
             }
@@ -164,7 +179,7 @@ static inline int add_to_list(int num_candidates, int num_neighbours, idx_arr* t
             }
         }
     }
-    else if (query_config.min_num_finest_level_points > 0 && 
+    else if (query_config.min_num_finest_level_points && 
         (*num_returned_finest_level_points) <  query_config.min_num_finest_level_points) { // Also Add
         top_candidates[*num_returned].key = cur_dist;
         top_candidates[*num_returned].info = cur_points;
@@ -188,6 +203,50 @@ static void dci_gen_proj_vec(float* const proj_vec, const int dim,
         norm = sqrt(sq_norm);
         for (i = 0; i < dim; i++) {
             proj_vec[i + j * dim] /= norm;
+        }
+    }
+}
+
+void data_projection(int num_comp_indices, int num_simp_indices,
+    float* proj_vec, float* add_proj_vec, additional_info** root, const int dim,
+    const int num_points, const float* const data, bool* mask,
+    float* norm_list, float* max_norm, float** data_proj_ret) {
+
+    int i, j, ii;
+    int num_indices = num_comp_indices * num_simp_indices;
+    // True if data_proj is (# of points) x (# of cell_indices)
+    // column-major; used only for error-checking
+
+    float* data_proj;
+    if (posix_memalign((void**)&data_proj, 32, sizeof(float) * num_indices * num_points) != 0) {
+        perror("Memory allocation failed!\n");
+        return;
+    }
+    *data_proj_ret = data_proj;
+
+    // Calculate the norm of all points
+    float temp_norm;
+    for (i = 0; i < num_points; i++) {
+        if (mask == NULL || mask[i]) {
+            temp_norm = 0.0;
+            for (j = 0; j < dim; j++) {
+                temp_norm += data[j+i*dim] * data[j+i*dim];
+            }
+            norm_list[i] = temp_norm;
+            if (*max_norm <  temp_norm) {
+                *max_norm = temp_norm;
+            }
+        }
+    }
+
+    // data_proj is (# of cell_indices) x (# of points) column-major
+    matmul(num_indices, num_points, dim, proj_vec, data, data_proj);
+    // key_transform
+    for (i = 0; i < num_points; i++) {
+        if (mask == NULL || mask[i]) {
+            for (j = 0; j < num_indices; j++) {
+                data_proj[j+i*num_indices] = data_proj[j+i*num_indices] + sqrt((*max_norm) - (norm_list[i])) * add_proj_vec[j];
+            }
         }
     }
 }
@@ -370,6 +429,8 @@ static inline int dci_compare_id(const void *a, const void *b) {
 }
 
 void update_arr_indices(int num_indices, additional_info* point) {
+    if (point->flag == 0)
+        return;
     int num_points = point->cell_indices[0].num_data;
     if (num_points == 0) {
         point->arr_indices = NULL;
@@ -503,48 +564,6 @@ static void dci_assign_parent(
     const int* selected_query_pos, const float* const query, float max_norm, float* norm_list,
     const float* const query_proj, const dci_query_config query_config,
     tree_node* const assigned_parent);
-
-void data_projection(int num_comp_indices, int num_simp_indices,
-    float* proj_vec, float* add_proj_vec, additional_info** root, const int dim,
-    const int num_points, const float* const data, bool* mask,
-    float* norm_list, float* max_norm, float** data_proj_ret) {
-
-    int i, j, ii;
-    int num_indices = num_comp_indices * num_simp_indices;
-    // True if data_proj is (# of points) x (# of cell_indices)
-    // column-major; used only for error-checking
-
-    float* data_proj;
-    assert(posix_memalign((void**)&data_proj, 32, sizeof(float) * num_indices * num_points) == 0);
-    *data_proj_ret = data_proj;
-
-    // Calculate the norm of all points
-    float temp_norm = 0.0;
-    for (i = 0; i < num_points; i++) {
-        if (mask[i]) {
-            for (j = 0; j < dim; j++) {
-                temp_norm += data[j+i*dim] * data[j+i*dim];
-            }
-            norm_list[i] = temp_norm;
-            if (*max_norm <  temp_norm) {
-                *max_norm = temp_norm;
-            }
-            temp_norm = 0.0;
-        }
-    }
-
-    // data_proj is (# of cell_indices) x (# of points) column-major
-    matmul(num_indices, num_points, dim, proj_vec, data, data_proj);
-    // key_transform
-    float sqt = sqrt(*max_norm);
-    for (ii = 0; ii < num_points; ii++) {
-        if (mask[ii]) {
-            for (j = 0; j < num_indices; j++) {
-                data_proj[j+ii*num_indices] = data_proj[j+ii*num_indices]/sqt + sqrt(1-norm_list[ii]/(*max_norm))*add_proj_vec[j];
-            }
-        }
-    }
-}
 
 void initialize_tree(int num_comp_indices, int num_simp_indices, additional_info** root) {
 
@@ -719,7 +738,7 @@ void construct_new_tree(int num_comp_indices, int num_simp_indices, int parallel
     float bulk_data_proj[max_num_points_on_level];
     data_pt bulk_data[max_num_points_on_level];
     bulk_data_pt bulk[max_num_points_on_level];
-    int parent_idx[max_num_points_on_level];
+    int parent_idx[max_num_points_on_level + 1];
 
     num_points_on_upper_levels = num_points_on_cur_levels;
 
